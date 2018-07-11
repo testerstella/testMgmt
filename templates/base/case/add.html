@@ -1,0 +1,344 @@
+
+{% extends "../../base.html" %}
+
+{% block crumbs %}
+<div class="row">
+    <div class="col-md-12">
+        <ol class="breadcrumb">
+            <li>
+                <a href="/yqjr/index">主页</a>
+            </li>
+            <li class="active">
+                <a class="this">基础信息</a>
+            </li>
+            <li class="active">
+                <a class="this-page">用例管理</a>
+            </li>
+            <li class="active">
+                <a class="">用例添加</a>
+            </li>
+        </ol>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h3 class="panel-title">添加用例</h3>
+            </div>
+            <div class="ibox-content">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">用例名称</label>
+                        <div class="col-sm-8">
+                            <input type="text" id="case_name" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">所属项目</label>
+                        <div class="col-sm-8">
+                            <select id="prj_id" class="form-control" onchange=get_if()>
+                                <option value=>请选择项目</option>
+                                {% for prj in prj_list %}
+                                <option value={{ prj.prj_id }}>{{ prj.prj_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">用例描述</label>
+                        <div class="col-sm-8">
+                            <textarea id="description" placeholder="请输入内容" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">添加步骤</label>
+                        <div class="col-sm-4">
+                            <select class="form-control" id="if_id" name="if_id">
+                                <option value="">请选择接口</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-4 ">
+                            <button id="add_interface" class="btn btn-primary" type="button">确定</button>
+                        </div>
+                    </div>
+                    <div id="case-list">
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-6">
+                            <button type="submit" id="submit" class="btn btn-primary">保存</button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    {% endblock %}
+    {% block javascript %}
+    <script>
+
+        //删除本接口
+        function del_interface(obj) {
+            var div = $(obj).parent("div").parent().parent();
+            $(div).remove();
+        }
+
+        //删除行
+        function del_step(obj) {
+            var tr = obj.parentNode.parentNode;
+            var tbody = tr.parentNode;
+            tbody.removeChild(tr);
+        }
+
+
+        //添加头参数
+        function add_header_row(obj) {
+            var panel = $(obj).parent().parent();
+            var tbody = $(panel).find("table[name='header']").children('tbody');
+            var newRow = "<tr><td style='border: 1px solid #ddd;width:45%' name='var_name' contenteditable='true'></td><td style='border: 1px solid #ddd;width:45%' name='var_value' contenteditable='true'></td> <td style='border: 1px solid #ddd;'> <button class='btn btn-xs btn-outline btn-danger' type='button' onclick='del_step(this)'><i class='fa fa-times'>删除行</i></button> </td> </tr>";
+            $(tbody).append(newRow);
+        }
+
+        //添加body参数
+        function add_body_row(obj) {
+            var panel = $(obj).parent().parent();
+            var tbody = $(panel).find("table[name='body']").children('tbody');
+            var newRow = "<tr><td style='border: 1px solid #ddd;width:45%' name='var_name' contenteditable='true'></td><td style='border: 1px solid #ddd;width:45%' name='var_value' contenteditable='true'></td> <td style='border: 1px solid #ddd;'> <button class='btn btn-xs btn-outline btn-danger' type='button' onclick='del_step(this)'><i class='fa fa-times'>删除行</i></button> </td> </tr>";
+            $(tbody).append(newRow);
+        }
+
+        //添加提取参数
+        function add_extract_row(obj) {
+        var panel = $(obj).parent().parent();
+        var tbody = $(panel).find("table[name='extract']").children('tbody');
+        var newRow = "<tr> <td style='border: 1px solid #ddd;width:45%' name='var_name' contenteditable='true'></td><td style='border: 1px solid #ddd;width:45%'> <button class='btn btn-xs btn-outline btn-danger' type='button' onclick='del_step(this)'><i class='fa fa-times'>删除行</i></button> </td> </tr>";
+        $(tbody).append(newRow);
+    }
+
+
+        //添加检查点参数
+        function add_validators_row(obj) {
+            var panel = $(obj).parent().parent();
+            var tbody = $(panel).find("table[name='validators']").children('tbody');
+            var newRow = "<tr><td style='border: 1px solid #ddd;width:45%' name='var_name' contenteditable='true'></td>< style='border: 1px solid #ddd;width:45%' name='var_value' contenteditable='true'></td> <td> <button style='border: 1px solid #ddd;' class='btn btn-xs btn-outline btn-danger' type='button' onclick='del_step(this)'><i class='fa fa-times'>删除行</i></button> </td> </tr>";
+            $(tbody).append(newRow);
+        }
+
+
+        function get_if() {
+            $("#if_id").empty();
+            var prj_id = $("#prj_id").val();
+            if (prj_id == null) {
+                alert("请先选择项目");
+            }
+            else {
+                $.ajax({
+                    type: "get",
+                    url: "/base/findata/",
+                    data: {
+                        "prj_id": prj_id,
+                        "type": "get_all_if_by_prj_id"
+                    },
+                    success: function (data) {
+                        dataJson = eval(data);
+                        $.each(dataJson, function (i, item) {
+                            $("#if_id").append("<option value=" + item.if_id + ">" + item.if_name + "</option>");
+                        })
+                    },
+                    error: function () {
+                        alert("获取接口失败！");
+                    }
+                });
+            }
+        }
+    </script>
+    <script>
+        $(document).ready(function () {
+            //添加接口
+            $("#add_interface").click(function () {
+                    var if_id = $("#if_id").val();
+                    if (if_id == "") {
+                        alert("请先选择接口");
+                    }
+                    else {
+                        $.ajax({
+                            url: "/base/findata/",
+                            type: "get",
+                            data: {
+                                "if_id": if_id,
+                                "type": "get_if_by_if_id",
+                            },
+                            success: function (data) {
+                                var listdata = eval(data);
+                                $(listdata).each(function (i, item) {
+
+                                    var header_json = item.request_header_param;
+                                    var header_table = "<table name='header' class='table' style='margin-left: 30px;width: 66%; border:1px solid #ddd'><thead><tr><th>参数名</th>" +
+                                        "<th>值</th>" +
+                                        "<th></th> </tr> </thead><tbody>";
+                                    $.each(JSON.parse(header_json), function (i, item) {
+                                        var tr = "<tr><td name='var_name' style='border: 1px solid #ddd;width:45%'>" + item.var_name + "</td><td style='border: 1px solid #ddd;width:45%' contenteditable='true' name='var_value'></td><td><button class='btn btn-xs btn-outline btn-danger' type='button' onclick='del_step(this);'><i class='fa fa-times'>删除行</i> </button> </td></tr>";
+                                        header_table = header_table + tr;
+                                    });
+                                    var header = header_table + "</tbody></table>";
+
+                                    var body_json = item.request_body_param;
+                                    var body_table = "<table name='body' class='table' style='margin-left: 30px; width: 66%;border:1px solid #ddd'><thead><tr> <th>参数名</th>" +
+                                        "<th>值</th>" +
+                                        "<th></th> </tr> </thead><tbody>";
+                                    $.each(JSON.parse(body_json), function (i, item) {
+                                        var tr = "<tr><td name='var_name' style='border: 1px solid #ddd;width:45%'>" + item.var_name + "</td><td contenteditable='true' name='var_value' style='border: 1px solid #ddd;width:45%'></td><td><button class='btn btn-xs btn-outline btn-danger' type='button' onclick='del_step(this);'><i class='fa fa-times'>删除行</i> </button> </td></tr>";
+                                        body_table = body_table + tr
+                                    });
+                                    var body = body_table + "</tbody></table>";
+
+
+                                    var newtable = "<div class='row'><div class='col-sm-offset-1 col-sm-9'> <div class='panel' style='padding-left:10px;margin-left:132px;padding-bottom: 35px;'>" +
+                                        "<div id= '" + item.if_id + "' class='panel-heading'>" +
+                                        "<h3 class='panel-title' style='margin-left:6px'>" + item.if_name + "</h3>" +
+                                        "<div class='right'><button type='button' class='btn-toggle-collapse' data-toggle='collapse' \n" +
+                                        "    data-target='#demo'><i class='lnr lnr-chevron-up'></i></button></div>" +
+                                        "</div>" +
+                                        "<div id='demo'>"+
+                                        "<div class='panel-body'>" +
+                                        "<button onclick='add_header_row(this)' class='btn btn-primary' style='margin-left:5px'>添加header参数</button>" +
+                                        "<button onclick='add_body_row(this)' class='btn btn-primary' style='margin-left:5px'>添加body参数</button> " +
+                                        "<button onclick='add_extract_row(this)' class='btn btn-primary' style='margin-left:5px'>添加提取参数</button> " +
+                                        "<button onclick='add_validators_row(this)' class='btn btn-primary' style='margin-left:5px'>添加检查点</button> " +
+                                        "<button onclick='del_interface(this)' class='btn btn-danger' style='margin-left:5px'>删除本接口</button></div> " +
+                                        "<p style='margin-left: 32px;    color: rgb(29, 197, 163);padding-top: 10px;'>header参数</p>" +
+                                        header +
+                                        "<p style='margin-left: 32px;    color: rgb(29, 197, 163);padding-top: 10px;'>body参数</p>" +
+                                        body +
+                                        "<p style='margin-left: 32px;    color: rgb(29, 197, 163);padding-top: 10px;'>提取参数</p> " +
+                                        "<table name='extract' class='table' style='width: 66%;margin-left: 30px;border:1px solid #ddd' >" +
+                                        "<thead>" +
+                                        "<tr style='border:1px solid #ddd'>" +
+                                        "<th >参数名</th>" +
+                                        "<th ></th>" +
+                                        "</tr> " +
+                                        "</thead>" +
+                                        "<tbody> " +
+                                        "</tbody> " +
+                                        "</table> " +
+                                        "<p style='margin-left: 32px;     color: rgb(29, 197, 163);padding-top: 10px;'>检查点</p> " +
+                                        "<table name='validators' class='table' style='margin-left: 30px; width: 66%;border:1px solid #ddd'>" +
+                                        "<thead>" +
+                                        "<th>参数名</th>" +
+                                        "<th>期望值</th>" +
+                                        "</tr>" +
+                                        "</thead>" +
+                                        "<tbody>" +
+                                        "</tbody>" +
+                                        "</table>" +
+                                        "</div> </div></div>"
+                                    $("#case-list").append(newtable);
+
+                                });
+
+                            },
+                            error: function () {
+                                alert("error!");
+                            }
+                        });
+                    }
+                });
+
+
+            $("#submit").click(function () {
+            var case_name = $("#case_name").val();
+            var prj_id = $("#prj_id").val();
+            var description = $("#description").val();
+
+            var content = [];
+            $("div[class='panel']").each(function(i){
+
+                var step = {};
+
+                var if_id = $(this).find("div[class='panel-heading']").attr("id");
+                var if_name = $(this).find("div[class='panel-heading']").text();
+                var header_table = $(this).find("table[name='header']");
+                var header = {};
+                $(header_table).find("tr").each(function (i) {
+                    if (i == 0) return true;
+                    var name = $(this).find("td[name='var_name']").text();
+                    var value = $(this).find("td[name='var_value']").text();
+                    header[name] = value;
+                });
+
+                var body_table = $(this).find("table[name='body']");
+                var body = {};
+                $(body_table).find("tr").each(function (i) {
+                    if (i == 0) return true;
+                    var name = $(this).find("td[name='var_name']").text();
+                    var value = $(this).find("td[name='var_value']").text();
+                    body[name] = value;
+                });
+
+                var extract_table = $(this).find("table[name='extract']");
+                var extract = {};
+                $(extract_table).find("tr").each(function (i) {
+                    if (i == 0) return true;
+                    var name = $(this).find("td[name='var_name']").text();
+                    extract[name] = "";
+                });
+
+                var validators_table = $(this).find("table[name='validators']");
+                var validators = [];
+                $(validators_table).find("tr").each(function (i) {
+                    if (i == 0) return true;
+                    var vl = {};
+                    var name = $(this).find("td[name='var_name']").text();
+                    var value = $(this).find("td[name='var_value']").text();
+                    vl["check"] = name;
+                    vl["comparator"] = "eq";
+                    vl["expect"] = value;
+                    validators.push(vl);
+                });
+
+                step["if_id"] = if_id;
+                step["if_name"] = if_name;
+                step["header"] = header;
+                step["body"] = body;
+                step["extract"] = extract;
+                step["validators"] = validators;
+
+                content.push(step);
+            });
+            var content_json = JSON.stringify(content);
+
+            $.ajax({
+                url: "/base/case_add/",
+                type: "post",
+                data: {
+                    "case_name": case_name,
+                    "prj_id": prj_id,
+                    "description": description,
+                    "content": content_json
+                },
+                // dataType: "json",
+                success: function () {
+                    alert("保存成功");
+                    window.location.replace("/base/case/");
+                },
+                error: function () {
+                    alert("error!");
+                }
+            });
+
+
+        });
+
+        });
+
+    </script>
+
+
+    {% endblock %}

@@ -1,0 +1,61 @@
+{% extends "../base.html" %}
+
+{% block crumbs %}
+    <div class="row">
+        <div class="col-md-12">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="/index">主页</a>
+                </li>
+                <li class="active">
+                    <a class="this">系统设置</a>
+                </li>
+                <li class="active">
+                    <a class="this-page">签名方式</a>
+                </li>
+            </ol>
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block body %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel">
+                <div class="panel-heading">
+                   <a href="/base/sign_add" class="btn btn-primary">添加</a>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                    <th>ID</th>
+                    <th>名称</th>
+                    <th>描述</th>
+                    <th>操作</th>
+                </tr>
+                        </thead>
+                        <tbody>
+                        {% for sign in sign_list %}
+                    <tr>
+                        <td>{{ sign.sign_id }}</td>
+                        <td>{{ sign.sign_name }}</td>
+                        <td>{{ sign.description }}</td>
+                        <td>
+                            <a href="/sign_update?sign_id={{ sign.sign_id }}" class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+                            <a href="/sign_delete?sign_id={{ sign.sign_id }}" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+{% endblock %}
