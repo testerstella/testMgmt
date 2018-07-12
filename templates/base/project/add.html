@@ -38,6 +38,11 @@
                         <div class="col-sm-6">
                             <input type="text" name="prj_name" class="form-control">
                         </div>
+                        {% if messages %}
+                            {% for msg in messages %}
+                                <div style="color:red">{{ msg.message }} !</div>
+                            {% endfor %}
+                        {% endif %}
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label">项目描述</label>

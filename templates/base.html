@@ -123,6 +123,80 @@
             }
         }
     });
+
+    function showInfo(obj) {
+
+        var td_tag = obj.parentNode;
+        var details_div = td_tag.lastElementChild;
+        // var details_div = document.getElementById(div_id)
+        var displayState = details_div.style.display;
+        if (displayState != 'block') {
+            details_div.style.display = 'block';
+        }
+        else {
+            details_div.style.display = 'none'
+        }
+    }
+
+    function showAll() {
+        //计算展示出来的行数 付给total行
+        var trs = document.getElementsByTagName("tr");
+        for (var i = 1; i < trs.length - 1; i++) {
+            trs[i].style.display = 'table-row';
+        }
+    }
+
+    function showPass() {
+        var trs = document.getElementsByTagName("tr");
+        var count= 0;
+        for (var i = 1; i < trs.length - 1; i++) {
+            if (trs[i].className == "passCase") {
+                trs[i].style.display = 'table-row';
+                count = count + 1;
+            }
+            else {
+                trs[i].style.display = 'none';
+            }
+        }
+        $("#total_case_num").html("");
+        $("#total_case_num").append(count);
+        $("#total_pass_num").html("");
+        $("#total_pass_num").append(count);
+        $("#total_fail_num").html("");
+        $("#total_fail_num").append(0);
+    }
+
+    function showFail() {
+        var trs = document.getElementsByTagName("tr");
+        var count= 0;
+        for (var i = 1; i < trs.length - 1; i++) {
+            if (trs[i].className == "failCase") {
+                trs[i].style.display = 'table-row';
+                count = count + 1;
+            }
+            else {
+                trs[i].style.display = 'none';
+            }
+        }
+        $("#total_case_num").html("");
+        $("#total_case_num").append(count);
+        $("#total_pass_num").html("");
+        $("#total_pass_num").append(0);
+        $("#total_fail_num").html("");
+        $("#total_fail_num").append(count);
+    }
+
+    function showError() {
+        var trs = document.getElementsByTagName("tr");
+        for (var i = 1; i < trs.length - 1; i++) {
+            if (trs[i].className == "errorCase") {
+                trs[i].style.display = 'table-row';
+            }
+            else {
+                trs[i].style.display = 'none';
+            }
+        }
+    }
 </script>
 {% block javascript %} {% endblock %}
 </body>
